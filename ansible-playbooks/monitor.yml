@@ -1,0 +1,20 @@
+- name: Transfer and execute a script.
+  hosts: webservers
+  become: yes
+  tasks:
+
+     - name: Transfer the monitoring script 
+       copy: src=/etc/ansible/playbooks/monitoring.sh dest=/root/test mode=0777
+
+     - name: Execute the script
+       shell: bash -c "/root/test/monitoring.sh 2>&1 > /root/test/debug.log"
+
+     - name: "Generate log file"
+       shell: |
+         cat /root/test/debug.log
+       register: file_content
+
+     - name: "Display the script output"
+       debug:
+         msg: "{{ file_content.stdout_lines }}"
+

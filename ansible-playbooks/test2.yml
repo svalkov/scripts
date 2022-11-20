@@ -1,0 +1,5 @@
+- hosts: worker
+  become: yes
+  tasks:
+    - name: Copy file from machine1 to machine2 
+      shell: scp root@192.168.100.13:/tmp/dsm_ip /tmp/dsm_ip

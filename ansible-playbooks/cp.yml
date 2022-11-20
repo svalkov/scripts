@@ -1,0 +1,9 @@
+- hosts: worker
+  user: root
+  tasks:
+    - name: copy file from machine1 to local
+      fetch: src=/tmp/dsm_ip dest=/tmp/
+    - name: copy file from machine1 to local
+      fetch: src=/tmp/dsm_mt dest=/tmp/
+    - name: copy file from machine1 to local
+      fetch: src=/tmp/dsm_wt dest=/tmp/

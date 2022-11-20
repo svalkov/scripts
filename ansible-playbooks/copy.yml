@@ -1,0 +1,8 @@
+- hosts: worker
+  tasks:    
+    - name: Copy Remote-To-Remote (from serverA to serverB)
+      synchronize: 
+        src: /tmp/
+        dest: /tmp
+        mode: push
+      delegate_to: 192.168.100.13

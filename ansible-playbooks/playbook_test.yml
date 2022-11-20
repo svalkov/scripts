@@ -1,0 +1,14 @@
+#target host or group
+- hosts: [web]
+  tasks:
+  # any task name
+  - name: Test Task
+    # use file module to set the file state
+    file:
+      path: /home/valkov/test
+      owner: valkov
+      group: valkov
+      mode: 777
+
+  - name: Test Task 2
+	#

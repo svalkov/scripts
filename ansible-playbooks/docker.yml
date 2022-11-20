@@ -1,0 +1,83 @@
+---
+- name: Install docker in Rocky
+  hosts: docker
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: Set up docker repository
+      shell: |
+        dnf install -y yum-utils
+        yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      args:
+        warn: no
+
+    - name: Install the latest version of Docker Engine and containerd
+      dnf:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+      notify: Start and enable docker
+
+    - name: Add the current user to the docker group
+      user:
+        name: valkov
+        groups: docker
+        append: yes
+
+  handlers:
+    - name: Start and enable docker
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+- hosts: manager
+  tasks:
+    - name: Create primary swarm manager
+      shell: docker swarm init --advertise-addr {{ ansible_enp0s8.ipv4.address }}
+#      when: "docker_info.stdout.find('Swarm: inactive') > 0"
+
+    - name: Get docker swarm manager ip
+      copy:
+        content: '{{ ansible_enp0s8.ipv4.address }}'
+        dest: '/tmp/dsm_ip'
+
+    - name: Get docker swarm manager token
+      shell: docker swarm join-token -q manager
+      register: swarm_manager_token
+    - copy:
+        content: '{{ swarm_manager_token.stdout }}'
+        dest: '/tmp/dsm_mt'
+
+    - name: Get docker swarm worker token
+      shell: docker swarm join-token -q worker
+      register: swarm_worker_token
+    - copy:
+        content: '{{ swarm_worker_token.stdout }}'
+        dest: '/tmp/dsm_wt'
+#- hosts: worker
+#  tasks:
+#    - name: Copy Remote-To-Remote (from serverA to serverB)
+#      synchronize:
+#        src: /tmp/
+#        dest: /tmp
+#        mode: push
+#      delegate_to: 192.168.100.13
+- hosts: manager
+  user: root
+  tasks:
+    - name: copy file from machine1 to local
+      fetch: src=/tmp/dsm_ip dest=/tmp/
+    - name: copy file from machine1 to local
+      fetch: src=/tmp/dsm_mt dest=/tmp/
+    - name: copy file from machine1 to local
+      fetch: src=/tmp/dsm_wt dest=/tmp/
+- hosts: worker
+  become: yes
+  tasks:
+    - name: Join the swarm
+      shell: "docker swarm join --token {{ lookup('file', '/tmp/192.168.100.13/tmp/dsm_mt') }} {{ lookup('file', '/tmp/192.168.100.13/tmp/dsm_ip') }}:2377"
+      retries: 5
+      delay: 5
