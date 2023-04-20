@@ -60,7 +60,7 @@ done
 echo
 echo
 
-#APACHE CHECK
+#APACHE SERVICE CHECK
 echo "Checking if the Apache service is running..."
 systemctl status httpd | egrep -i 'status'
 if systemctl status httpd > /dev/null; then
